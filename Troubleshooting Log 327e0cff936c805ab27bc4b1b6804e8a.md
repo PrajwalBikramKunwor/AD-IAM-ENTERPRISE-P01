@@ -1,0 +1,11 @@
+# Troubleshooting Log
+
+| **LOG** | **ISSUE** | **ROOT CAUSE** | **RESOLUTION** | **WINNING COMMAND** |
+| --- | --- | --- | --- | --- |
+| Virtualisation Error | ISO not loading. | Architecture Mismatch | DOwnloaded windows 11 from vmware auto downloader. |  |
+| Privilege Escalation & UAC | "Access Denied" / "Requires Elevation”Commands failed immediately with an error stating the requested operation required elevation. | By default, Windows runs all processes—even those started by an Administrator—with a "Standard User" token to prevent accidental system damage or malware execution. | performed a "Right-Click > Run as Administrator" action. and Interacted with the **Secure Desktop** prompt to grant the PowerShell process a full **Administrative Access Token.** Confirmed elevation by checking the window title bar for the prefix **"Administrator: Windows PowerShell"** and verifying the working directory defaulted to `C:\Windows\System32`. |  |
+| Management Tool | Standard powershell commands returned null or capability not recognised. | Architecture mismatch. Windows 11 on Mac M3 uses **ARM64** logic, while many tutorials are written for **Intel (x64)**logic. The "Cloud Catalog" names didn't match the "Local Image" names. |   • Instead of guessing, ran a discovery command to see what name is it stored with,
+  • The system revealed the secret name **`ActiveDirectory-DS-LDS-Tools`**.
+  • bypassed the high-level PowerShell "Capabilities" and used the **DISM (Deployment Image Servicing and Management)** engine to talk directly to the Windows image.
+  •  | `$dism /online ./enable-feature /featurename :ActiveDirectory-DS-LDS-Tools /all$` |
+| Deployment Module mismatch | Running `Get-Command *Forest*` revealed that only the **ActiveDirectory** (Management) module was present, while the **ADDSDeployment** (Creation) module was missing. | Windows 11 is a "Client" OS. Microsoft intentionally excludes the Forest-building binaries (`Install-ADDSForest`) from Desktop versions of Windows to prevent them from being used as Servers. | Decision made to pivot to **Windows Server ARM64** to allow for native Forest promotion and proper lab architecture. |  |
